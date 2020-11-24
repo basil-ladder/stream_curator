@@ -52,7 +52,7 @@ fn main() -> Result<(), String> {
             .map_err(|e| e.to_string())?;
     let mut rng = thread_rng();
     let bots = game_listing.bots;
-    game_listing.results.truncate(200);
+    game_listing.results.truncate(400);
     game_listing
         .results
         .sort_by_key(|g| bots[g.bot_a.bot_index].rating);
@@ -71,7 +71,7 @@ fn main() -> Result<(), String> {
     replay_files.reverse();
     let mut candidates = vec![];
     let a = 1.161_f32; // 80-20 :D
-    while candidates.len() < 20 && !replay_files.is_empty() {
+    while candidates.len() < 40 && !replay_files.is_empty() {
         let h = replay_files.len() as f32;
         let rnd: f32 = rng.sample(Open01);
         let x = (-(rnd * h.powf(a) - rnd * 1_f32 - h.powf(a)) / (h.powf(a))).powf(-1_f32 / a)
