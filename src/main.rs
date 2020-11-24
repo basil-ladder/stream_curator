@@ -34,7 +34,7 @@ struct GameResult {
     #[serde(rename(deserialize = "frameTimeout"))]
     frame_timeout: bool,
     #[serde(rename(deserialize = "frameCount"))]
-    frame_count: u32,
+    frame_count: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -47,18 +47,26 @@ fn main() -> Result<(), String> {
     let mut args = env::args();
     args.next();
     let game_list_file = args.next().expect("Path to game list json required!");
-    let mut game_listing: GameListing =
+    let game_listing: GameListing =
         serde_json::from_slice(&fs::read(game_list_file).map_err(|e| e.to_string())?)
             .map_err(|e| e.to_string())?;
     let mut rng = thread_rng();
     let bots = game_listing.bots;
-    game_listing.results.truncate(400);
-    game_listing
+    let mut results: Vec<_> = game_listing
         .results
-        .sort_by_key(|g| bots[g.bot_a.bot_index].rating);
+        .iter()
+        .filter(|g| {
+            if let Some(frame_count) = g.frame_count {
+                frame_count > 2880_u32
+            } else {
+                false
+            }
+        })
+        .take(400)
+        .collect();
+    results.sort_by_key(|g| bots[g.bot_a.bot_index].rating);
     let maps = game_listing.maps;
-    let mut replay_files: Vec<String> = game_listing
-        .results
+    let mut replay_files: Vec<String> = results
         .iter()
         .map(|game| {
             let bot_a = &bots[game.bot_a.bot_index].name;
